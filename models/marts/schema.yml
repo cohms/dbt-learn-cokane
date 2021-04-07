@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_orders
+    description: Total order amounts per order id where status <> 'fail'
+    columns:
+      - name: order_id
+        description: Primary key
+        tests:
+          - unique
+          - not_null

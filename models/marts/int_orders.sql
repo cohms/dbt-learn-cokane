@@ -1,26 +1,30 @@
-with orders as (
-    select * from {{ref('stg_orders')}}
+with orders as  (
+    select * from {{ ref('stg_orders' )}}
 )
 
 , payments as (
     select * from {{ref('stg_stripe__payments')}}
-    where status <> 'fail'
 )
 
+, order_payments as (
+    select 
+        order_id,
+        sum(amount) as amount
+    from payments
+    where status <> 'fail'
+    group by 1
+)
 
-, joined as (
-    Select 
+, final as (
+    select 
         orders.order_id,
         orders.customer_id,
         orders.order_date,
-        orders.status,
-        sum(amount) as order_total
-
-    from orders 
-        left join payments 
-            on orders.order_id = payments.order_id
-    group by 1,2,3,4       
+        coalesce(order_payments.amount,0) as order_total
+    from orders
+        left join order_payments
+            on orders.order_id = order_payments.order_id
 )
 
 select *
-from joined
+from final
